@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Ensure proper scaling on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Item Selection</title>
+  <style>
+    /* Reset & Global Styles */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #8e44ad, #9b59b6);
+      min-height: 100vh;
+      color: #333;
+    }
+    /* Page Wrapper */
+    .page-wrapper {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    /* Idle Wave Wrapper */
+    .idle-wave-wrapper {
+      /* This wrapper will gently translate upward then back down */
+      animation: idleWave 3s infinite;
+    }
+    @keyframes idleWave {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    /* Section/Card Styles */
+    .header, .group, .shopping-cart, .footer {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      padding: 20px;
+      transition: transform 0.1s ease-out;
+    }
+    .header { text-align: center; padding: 30px; margin-bottom: 20px; }
+    .group h2,
+    .shopping-cart h2 {
+      background: #8e44ad;
+      color: #fff;
+      padding: 10px;
+      margin: 0 0 15px;
+      border-radius: 5px;
+    }
+    .footer { text-align: center; padding: 20px; }
+    /* Extra Idle Animations */
+    .total-container { animation: pulseTotal 3s infinite; }
+    @keyframes pulseTotal {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    .shopping-cart { animation: pulseCart 5s infinite; }
+    @keyframes pulseCart {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.01); }
+    }
+    /* Header Title & Wave Animation */
+    h1 {
+      margin: 0;
+      font-size: 2.5em;
+      color: #8e44ad;
+    }
+    h4 { margin: 10px 0 0; color: #555; }
+    .letter {
+      display: inline-block;
+      white-space: pre; /* preserve spaces */
+      animation: wave 3s infinite;
+    }
+    @keyframes wave {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+    /* Content Groups & Subgroups */
+    .subgroup {
+      margin-bottom: 20px;
+      padding-left: 15px;
+    }
+    .subgroup h3 {
+      margin: 0 0 10px;
+      color: #8e44ad;
+    }
+    /* Item Styles */
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.3s ease;
+    }
+    .item:hover { background-color: #f9f9f9; }
+    .item-label { flex: 2; }
+    .price {
+      flex: 1;
+      font-weight: bold;
+      color: #555;
+      text-align: center;
+    }
+    /* Quantity Controls */
+    .quantity-control {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .quantity-control button {
+      background-color: #8e44ad;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      font-size: 1em;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 0 5px;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .quantity-control button:hover {
+      background-color: #732d91;
+      transform: scale(1.1);
+    }
+    .quantity-control button:active { transform: scale(0.95); }
+    .quantity {
+      display: inline-block;
+      min-width: 20px;
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+    .quantity.updated { animation: pop 0.3s; }
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    /* Totals & Button Styles */
+    .total-container,
+    .object-count-container {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .button-container { margin-top: 15px; }
+    .button {
+      background-color: #8e44ad;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      margin: 0 10px;
+    }
+    .button:hover {
+      background-color: #732d91;
+      transform: scale(1.05);
+    }
+    /* Shopping Cart List Styles */
+    #shoppingCartList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .cart-item {
+      padding: 5px 10px;
+      border-bottom: 1px solid #ddd;
+      position: relative;
+    }
+    /* Cart Animations */
+    @keyframes cartEnter {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes cartExit {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(20px); }
+    }
+    .cart-update { animation: cartUpdate 0.3s; }
+    @keyframes cartUpdate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    /* Shopping Cart Section Appearance Animations */
+    @keyframes cartSectionShow {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes cartSectionHide {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0.8); opacity: 0; }
+    }
+    /* Total update animation */
+    .total-update { animation: totalPop 0.3s; }
+    @keyframes totalPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    /* Custom Tooltip Styles */
+    .tooltip-container {
+      position: relative;
+      display: inline-block;
+    }
+    .custom-tooltip {
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-size: 0.8em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 10;
+    }
+    .tooltip-container:hover .custom-tooltip {
+      opacity: 1;
+    }
+    /* Hide shopping cart section by default */
+    #shoppingCartSection {
+      display: none;
+    }
+    /* Mobile Responsiveness */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 10px; }
+      .header, .group, .shopping-cart, .footer { padding: 15px; }
+      .button { width: 100%; margin: 10px 0 0; }
+      .button-container { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Header Section wrapped with idle-wave (delay 0s) -->
+    <div class="idle-wave-wrapper" style="animation-delay: 0s;">
+      <header class="header tilt-effect">
+        <h1 id="title">Welcome to Steph404's Cost Estimation Website!</h1>
+        <h4>Base price 5€</h4>
+      </header>
+    </div>
+    
+    <!-- Main Content: Groups of Items -->
+    <main>
+      <!-- Group 1: Retexturing (delay 0.2s) -->
+    <div class="idle-wave-wrapper" style="animation-delay: 0.2s;">
+        <section class="group tilt-effect">
+          <h2>Retexturing</h2>
+          <div class="subgroup">
+            <h3>Main texture</h3>
+            <div class="item" data-price="0">
+              <span class="item-label">Base</span>
+              <span class="price">Included in Base price</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+            <div class="item" data-price="1">
+              <span class="item-label">Animated Emission Map</span>
+              <span class="price">1€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+            <div class="item" data-price="2">
+              <span class="item-label">Additional maps (Normal, Height, etc.)</span>
+              <span class="price">2€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="subgroup">
+            <h3>Alternate Textures</h3>
+            <div class="item" data-price="2">
+              <span class="item-label">Goo/Slime</span>
+              <span class="price">2€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+            <div class="item" data-price="4">
+              <span class="item-label">Additional Toggleable texture (If your character has multiple colors it can swap to)</span>
+              <span class="price">4€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+          </div>
+        </section>
+    </div>
+      
+      <!-- Group 2: Assets (delay 0.4s) -->
+    <div class="idle-wave-wrapper" style="animation-delay: 0.4s;">
+        <section class="group tilt-effect">
+          <h2>Assets</h2>
+          <div class="subgroup">
+            <h3>An Asset Steph404 already owns</h3>
+            <div class="item" data-price="0.5">
+              <span class="item-label">I don't want the Unity project file</span>
+              <span class="price">0.5€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+            <div class="item" data-price="0.5">
+              <span class="item-label">I want the Unity project file</span>
+              <span class="price">0.5€*</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="subgroup">
+            <h3>Custom</h3>
+            <div class="item" data-price="2">
+              <span class="item-label">No animations</span>
+              <span class="price">2€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+            <div class="item" data-price="5">
+              <span class="item-label">Sword setup</span>
+              <span class="price">5€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+            <div class="item" data-price="1">
+              <span class="item-label">Flag/Badge/Tag</span>
+              <span class="price">1€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      
+      <!-- Group 3: Base Model (delay 0.6s) -->
+    <div class="idle-wave-wrapper" style="animation-delay: 0.6s;">
+        <section class="group tilt-effect">
+          <h2>Base Model</h2>
+          <div class="subgroup">
+            <h3>A Base Steph404 already owns</h3>
+            <div class="item" data-price="0">
+              <span class="item-label">I don't want the Unity project file</span>
+              <span class="price">Included in Base Price</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+            <div class="item" data-price="0">
+              <span class="item-label">I want the Unity project file</span>
+              <span class="price">Free*</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="subgroup">
+            <h3>Edits</h3>
+            <div class="item" data-price="0">
+              <span class="item-label">Stuff that's already on the base</span>
+              <span class="price">Free</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+            <div class="item" data-price="2">
+              <span class="item-label">Body modifications (Tailmaws, Armor, etc.)</span>
+              <span class="price">2€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+            <div class="item" data-price="4">
+              <span class="item-label">Complex edits (Ask first!!)</span>
+              <span class="price">4€</span>
+              <div class="quantity-control">
+                <button class="minus">-</button>
+                <span class="quantity">0</span>
+                <button class="plus">+</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    
+    <!-- Shopping Cart Section (delay 0.8s) -->
+    <div class="idle-wave-wrapper" style="animation-delay: 0.8s;">
+      <section class="shopping-cart tilt-effect" id="shoppingCartSection">
+        <h2>Shopping Cart</h2>
+        <ul id="shoppingCartList"></ul>
+      </section>
+    </div>
+    
+    <!-- Footer Section (delay 1s) -->
+    <div class="idle-wave-wrapper" style="animation-delay: 1s;">
+      <footer class="footer tilt-effect">
+        <div class="total-container">
+          Total: <span id="total">5.00</span>€
+        </div>
+        <div class="object-count-container">
+          Items Selected: <span id="objectCount">0</span>
+        </div>
+        <div class="button-container">
+          <button class="button" id="resetBtn">Reset Selections</button>
+          <button class="button" id="externalLinkBtn">Check Commissions Status</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+  
+  <script>
+    let previousTotal = 5; // For total update animation
+    const tooltipItems = {}; // To record which items need a custom tooltip
+
+    // Set up custom tooltips on plus buttons for items with '*' in their price
+    document.querySelectorAll('.item').forEach(function(item) {
+      const priceText = item.querySelector('.price').textContent;
+      const label = item.querySelector('.item-label').textContent.trim();
+      if (priceText.includes('*')) {
+        tooltipItems[label] = true;
+        const plusButton = item.querySelector('.plus');
+        // Wrap the plus button in a tooltip container if not already done
+        if (!plusButton.parentNode.classList.contains('tooltip-container')) {
+          const container = document.createElement('div');
+          container.className = 'tooltip-container';
+          plusButton.parentNode.insertBefore(container, plusButton);
+          container.appendChild(plusButton);
+          const tooltipSpan = document.createElement('span');
+          tooltipSpan.className = 'custom-tooltip';
+          tooltipSpan.innerText = "You'll need to buy it yourself if you don't already own it";
+          container.appendChild(tooltipSpan);
+        }
+      }
+    });
+
+    // Update total cost, item count, and animate total changes
+    function updateTotal() {
+      let total = 5; // Base price
+      let count = 0;
+      document.querySelectorAll('.item').forEach(function(item) {
+        const quantityElem = item.querySelector('.quantity');
+        const quantity = parseInt(quantityElem.textContent);
+        const price = parseFloat(item.getAttribute('data-price'));
+        total += quantity * price;
+        count += quantity;
+      });
+      const totalElem = document.getElementById('total');
+      totalElem.textContent = total.toFixed(2);
+      document.getElementById('objectCount').textContent = count;
+      
+      // Animate the total container if total has changed
+      if (total !== previousTotal) {
+        const totalContainer = document.querySelector('.total-container');
+        totalContainer.classList.add('total-update');
+        setTimeout(() => totalContainer.classList.remove('total-update'), 300);
+        previousTotal = total;
+      }
+      updateShoppingCart();
+    }
+
+    // Update the Shopping Cart display with cool entrance/exit animations and custom tooltips
+    function updateShoppingCart() {
+      const cartList = document.getElementById('shoppingCartList');
+      // Create a lookup of current cart items (by label)
+      const currentCart = {};
+      cartList.querySelectorAll('.cart-item').forEach(item => {
+        const id = item.getAttribute('data-id');
+        currentCart[id] = item;
+      });
+      
+      // Process each item from the main list
+      document.querySelectorAll('.item').forEach(function(itemElem) {
+        const label = itemElem.querySelector('.item-label').textContent.trim();
+        const quantity = parseInt(itemElem.querySelector('.quantity').textContent);
+        const price = parseFloat(itemElem.getAttribute('data-price'));
+        const id = label;  // using label as unique id
+        if (quantity > 0) {
+          if (!currentCart[id]) {
+            // New cart item: create element with cool entry animation (scale in)
+            const li = document.createElement('li');
+            li.classList.add('cart-item');
+            li.setAttribute('data-id', id);
+            li.innerHTML = `<span class="cart-label">${label}</span> - <span class="cart-quantity">${quantity}</span> x ${price.toFixed(2)}€ = <span class="cart-subtotal">${(quantity * price).toFixed(2)}</span>€`;
+            li.style.animation = 'cartEnter 0.5s forwards';
+            // If this item requires a tooltip, wrap its content in a tooltip container
+            if (tooltipItems[id]) {
+              const wrapper = document.createElement('div');
+              wrapper.className = 'tooltip-container';
+              wrapper.innerHTML = li.innerHTML;
+              li.innerHTML = '';
+              li.appendChild(wrapper);
+              const tooltipSpan = document.createElement('span');
+              tooltipSpan.className = 'custom-tooltip';
+              tooltipSpan.innerText = "You'll need to buy it yourself if you don't already own it";
+              wrapper.appendChild(tooltipSpan);
+            }
+            cartList.appendChild(li);
+          } else {
+            // Existing cart item: update quantity and subtotal with an update animation
+            const li = currentCart[id];
+            li.querySelector('.cart-quantity').textContent = quantity;
+            li.querySelector('.cart-subtotal').textContent = (quantity * price).toFixed(2);
+            li.classList.add('cart-update');
+            setTimeout(() => li.classList.remove('cart-update'), 300);
+            delete currentCart[id]; // Mark as processed
+          }
+        }
+      });
+      // Remove any cart items that are no longer in the main list
+      for (const id in currentCart) {
+        const li = currentCart[id];
+        li.style.animation = 'cartExit 0.5s forwards';
+        li.addEventListener('animationend', () => li.remove());
+      }
+      
+      // Show or hide the shopping cart section based on whether items exist
+      const shoppingCartSection = document.getElementById('shoppingCartSection');
+      if (cartList.children.length > 0) {
+          shoppingCartSection.style.display = 'block';
+          shoppingCartSection.style.animation = 'cartSectionShow 0.5s forwards';
+      } else {
+          shoppingCartSection.style.animation = 'cartSectionHide 0.5s forwards';
+          shoppingCartSection.addEventListener('animationend', function() {
+             shoppingCartSection.style.display = 'none';
+          }, {once: true});
+      }
+    }
+
+    // Plus button event listeners
+    document.querySelectorAll('.plus').forEach(function(button) {
+      button.addEventListener('click', function() {
+        const quantityElem = this.parentElement.parentElement.querySelector('.quantity');
+        let currentVal = parseInt(quantityElem.textContent);
+        quantityElem.textContent = currentVal + 1;
+        quantityElem.classList.add('updated');
+        setTimeout(() => quantityElem.classList.remove('updated'), 300);
+        updateTotal();
+      });
+    });
+    
+    // Minus button event listeners
+    document.querySelectorAll('.minus').forEach(function(button) {
+      button.addEventListener('click', function() {
+        const quantityElem = this.parentElement.parentElement.querySelector('.quantity');
+        let currentVal = parseInt(quantityElem.textContent);
+        if (currentVal > 0) {
+          quantityElem.textContent = currentVal - 1;
+          quantityElem.classList.add('updated');
+          setTimeout(() => quantityElem.classList.remove('updated'), 300);
+          updateTotal();
+        }
+      });
+    });
+    
+    // Reset button event listener
+    document.getElementById('resetBtn').addEventListener('click', function() {
+      document.querySelectorAll('.quantity').forEach(function(quantityElem) {
+        quantityElem.textContent = '0';
+      });
+      updateTotal();
+    });
+    
+    // External link button event listener
+    document.getElementById('externalLinkBtn').addEventListener('click', function() {
+      window.location.href = 'https://trello.com/b/y1rX2oCF/commissions-steph404'; // Replace with your desired URL
+    });
+    
+    // Wrap each letter in the title for wave animation (preserving spaces)
+    const title = document.getElementById('title');
+    const text = title.textContent;
+    title.textContent = "";
+    for (let i = 0; i < text.length; i++) {
+      const span = document.createElement("span");
+      span.innerHTML = text[i] === " " ? "&nbsp;" : text[i];
+      span.classList.add("letter");
+      span.style.animationDelay = (i * 0.15) + "s";
+      title.appendChild(span);
+    }
+    
+    // 3D Tilt Effect for every element with the "tilt-effect" class (desktop only, multiplier = 2)
+    if (window.innerWidth > 600) {
+      document.querySelectorAll('.tilt-effect').forEach(function(el) {
+        el.addEventListener('mousemove', function(event) {
+          const rect = el.getBoundingClientRect();
+          const x = event.clientX - rect.left - rect.width / 2;
+          const y = event.clientY - rect.top - rect.height / 2;
+          const rotateX = (y / (rect.height / 2)) * 2;
+          const rotateY = -(x / (rect.width / 2)) * 2;
+          el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+        el.addEventListener('mouseleave', function() {
+          el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+        });
+      });
+    }
+  </script>
+</body>
+</html>
