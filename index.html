@@ -15,16 +15,42 @@
       background: linear-gradient(135deg, #8e44ad, #9b59b6);
       min-height: 100vh;
       color: #333;
+      overflow-x: hidden;
     }
-    /* Page Wrapper */
+    /* Fade In Animation for site content */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
     .page-wrapper {
       max-width: 1200px;
-      margin: 40px auto;
+      margin: 80px auto 40px auto; /* extra top margin so content isn’t hidden by fixed elements */
       padding: 20px;
+      animation: fadeIn 1s ease-out;
+    }
+    /* Intro Overlay (welcome/loading message) - Reverted to simple fade-out */
+    #introOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #8e44ad;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 2em;
+      z-index: 1000;
+      animation: fadeOutOverlay 3s forwards;
+    }
+    @keyframes fadeOutOverlay {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
     }
     /* Idle Wave Wrapper */
     .idle-wave-wrapper {
-      /* This wrapper will gently translate upward then back down */
       animation: idleWave 3s infinite;
     }
     @keyframes idleWave {
@@ -56,10 +82,9 @@
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.02); }
     }
-    .shopping-cart { animation: pulseCart 5s infinite; }
-    @keyframes pulseCart {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.01); }
+    /* Disable the pulse animation on the shopping cart so that the tilt effect works */
+    #shoppingCartSection {
+      animation: none !important;
     }
     /* Header Title & Wave Animation */
     h1 {
@@ -70,7 +95,7 @@
     h4 { margin: 10px 0 0; color: #555; }
     .letter {
       display: inline-block;
-      white-space: pre; /* preserve spaces */
+      white-space: pre;
       animation: wave 3s infinite;
     }
     @keyframes wave {
@@ -167,6 +192,7 @@
       list-style: none;
       padding: 0;
       margin: 0;
+      animation: none;
     }
     .cart-item {
       padding: 5px 10px;
@@ -242,11 +268,16 @@
   </style>
 </head>
 <body>
+  <!-- Intro Overlay (welcome/loading message) -->
+  <div id="introOverlay">
+    <div class="intro-message">Welcome!</div>
+  </div>
+  
   <div class="page-wrapper">
     <!-- Header Section wrapped with idle-wave (delay 0s) -->
     <div class="idle-wave-wrapper" style="animation-delay: 0s;">
       <header class="header tilt-effect">
-        <h1 id="title">Welcome to Steph404's Cost Estimation Website!</h1>
+        <h1 id="title">Steph404's Cost Estimation Website</h1>
         <h4>Base price 5€</h4>
       </header>
     </div>
@@ -254,7 +285,7 @@
     <!-- Main Content: Groups of Items -->
     <main>
       <!-- Group 1: Retexturing (delay 0.2s) -->
-    <div class="idle-wave-wrapper" style="animation-delay: 0.2s;">
+      <div class="idle-wave-wrapper" style="animation-delay: 0.2s;">
         <section class="group tilt-effect">
           <h2>Retexturing</h2>
           <div class="subgroup">
@@ -309,10 +340,10 @@
             </div>
           </div>
         </section>
-    </div>
+      </div>
       
       <!-- Group 2: Assets (delay 0.4s) -->
-    <div class="idle-wave-wrapper" style="animation-delay: 0.4s;">
+      <div class="idle-wave-wrapper" style="animation-delay: 0.4s;">
         <section class="group tilt-effect">
           <h2>Assets</h2>
           <div class="subgroup">
@@ -370,7 +401,7 @@
       </div>
       
       <!-- Group 3: Base Model (delay 0.6s) -->
-    <div class="idle-wave-wrapper" style="animation-delay: 0.6s;">
+      <div class="idle-wave-wrapper" style="animation-delay: 0.6s;">
         <section class="group tilt-effect">
           <h2>Base Model</h2>
           <div class="subgroup">
@@ -463,17 +494,14 @@
   </div>
   
   <script>
-    let previousTotal = 5; // For total update animation
-    const tooltipItems = {}; // To record which items need a custom tooltip
-
     // Set up custom tooltips on plus buttons for items with '*' in their price
+    const tooltipItems = {};
     document.querySelectorAll('.item').forEach(function(item) {
       const priceText = item.querySelector('.price').textContent;
       const label = item.querySelector('.item-label').textContent.trim();
       if (priceText.includes('*')) {
         tooltipItems[label] = true;
         const plusButton = item.querySelector('.plus');
-        // Wrap the plus button in a tooltip container if not already done
         if (!plusButton.parentNode.classList.contains('tooltip-container')) {
           const container = document.createElement('div');
           container.className = 'tooltip-container';
@@ -487,9 +515,9 @@
       }
     });
 
-    // Update total cost, item count, and animate total changes
+    let previousTotal = 5;
     function updateTotal() {
-      let total = 5; // Base price
+      let total = 5;
       let count = 0;
       document.querySelectorAll('.item').forEach(function(item) {
         const quantityElem = item.querySelector('.quantity');
@@ -498,11 +526,8 @@
         total += quantity * price;
         count += quantity;
       });
-      const totalElem = document.getElementById('total');
-      totalElem.textContent = total.toFixed(2);
+      document.getElementById('total').textContent = total.toFixed(2);
       document.getElementById('objectCount').textContent = count;
-      
-      // Animate the total container if total has changed
       if (total !== previousTotal) {
         const totalContainer = document.querySelector('.total-container');
         totalContainer.classList.add('total-update');
@@ -512,31 +537,26 @@
       updateShoppingCart();
     }
 
-    // Update the Shopping Cart display with cool entrance/exit animations and custom tooltips
     function updateShoppingCart() {
       const cartList = document.getElementById('shoppingCartList');
-      // Create a lookup of current cart items (by label)
       const currentCart = {};
       cartList.querySelectorAll('.cart-item').forEach(item => {
         const id = item.getAttribute('data-id');
         currentCart[id] = item;
       });
       
-      // Process each item from the main list
       document.querySelectorAll('.item').forEach(function(itemElem) {
         const label = itemElem.querySelector('.item-label').textContent.trim();
         const quantity = parseInt(itemElem.querySelector('.quantity').textContent);
         const price = parseFloat(itemElem.getAttribute('data-price'));
-        const id = label;  // using label as unique id
+        const id = label;
         if (quantity > 0) {
           if (!currentCart[id]) {
-            // New cart item: create element with cool entry animation (scale in)
             const li = document.createElement('li');
             li.classList.add('cart-item');
             li.setAttribute('data-id', id);
             li.innerHTML = `<span class="cart-label">${label}</span> - <span class="cart-quantity">${quantity}</span> x ${price.toFixed(2)}€ = <span class="cart-subtotal">${(quantity * price).toFixed(2)}</span>€`;
             li.style.animation = 'cartEnter 0.5s forwards';
-            // If this item requires a tooltip, wrap its content in a tooltip container
             if (tooltipItems[id]) {
               const wrapper = document.createElement('div');
               wrapper.className = 'tooltip-container';
@@ -550,24 +570,21 @@
             }
             cartList.appendChild(li);
           } else {
-            // Existing cart item: update quantity and subtotal with an update animation
             const li = currentCart[id];
             li.querySelector('.cart-quantity').textContent = quantity;
             li.querySelector('.cart-subtotal').textContent = (quantity * price).toFixed(2);
             li.classList.add('cart-update');
             setTimeout(() => li.classList.remove('cart-update'), 300);
-            delete currentCart[id]; // Mark as processed
+            delete currentCart[id];
           }
         }
       });
-      // Remove any cart items that are no longer in the main list
       for (const id in currentCart) {
         const li = currentCart[id];
         li.style.animation = 'cartExit 0.5s forwards';
         li.addEventListener('animationend', () => li.remove());
       }
       
-      // Show or hide the shopping cart section based on whether items exist
       const shoppingCartSection = document.getElementById('shoppingCartSection');
       if (cartList.children.length > 0) {
           shoppingCartSection.style.display = 'block';
@@ -580,7 +597,6 @@
       }
     }
 
-    // Plus button event listeners
     document.querySelectorAll('.plus').forEach(function(button) {
       button.addEventListener('click', function() {
         const quantityElem = this.parentElement.parentElement.querySelector('.quantity');
@@ -592,7 +608,6 @@
       });
     });
     
-    // Minus button event listeners
     document.querySelectorAll('.minus').forEach(function(button) {
       button.addEventListener('click', function() {
         const quantityElem = this.parentElement.parentElement.querySelector('.quantity');
@@ -606,7 +621,6 @@
       });
     });
     
-    // Reset button event listener
     document.getElementById('resetBtn').addEventListener('click', function() {
       document.querySelectorAll('.quantity').forEach(function(quantityElem) {
         quantityElem.textContent = '0';
@@ -614,12 +628,11 @@
       updateTotal();
     });
     
-    // External link button event listener
     document.getElementById('externalLinkBtn').addEventListener('click', function() {
-      window.location.href = 'https://trello.com/b/y1rX2oCF/commissions-steph404'; // Replace with your desired URL
+      window.location.href = 'https://trello.com/b/y1rX2oCF/commissions-steph404';
     });
     
-    // Wrap each letter in the title for wave animation (preserving spaces)
+    // Wrap each letter in the title for wave animation
     const title = document.getElementById('title');
     const text = title.textContent;
     title.textContent = "";
@@ -631,7 +644,7 @@
       title.appendChild(span);
     }
     
-    // 3D Tilt Effect for every element with the "tilt-effect" class (desktop only, multiplier = 2)
+    // 3D Tilt Effect for every element with the "tilt-effect" class (desktop only)
     if (window.innerWidth > 600) {
       document.querySelectorAll('.tilt-effect').forEach(function(el) {
         el.addEventListener('mousemove', function(event) {
@@ -647,6 +660,16 @@
         });
       });
     }
+    
+    // Remove the intro overlay after 3 seconds so it no longer blocks clicks
+    window.addEventListener('load', function() {
+      setTimeout(() => {
+        const introOverlay = document.getElementById('introOverlay');
+        if (introOverlay) {
+          introOverlay.parentNode.removeChild(introOverlay);
+        }
+      }, 3000);
+    });
   </script>
 </body>
 </html>
